@@ -36,7 +36,7 @@ function vHome(R){
   const own=S.dogs.filter(d=>d.status==='activ');const pups=nests.reduce((a,L)=>a+L.puppies.length,0);
   const yr=String(new Date().getFullYear());const wins=S.dogs.reduce((a,d)=>a+(d.shows||[]).filter(s=>s.date.startsWith(yr)).length,0);
   const late=R.filter(r=>diff(T,r.due)<0).length;
-  let h=S.sample?`<div class="banner"><p><b>Canisă exemplu.</b> Datele de mai jos sunt demonstrative. Tot ce adaugi sau modifici se salvează privat, doar pentru tine.</p><button class="btn sm" data-act="clearSample">Pornește cu o canisă goală</button></div>`:'';
+  let h=S.sample?`<div class="banner"><p><b>Canisă exemplu.</b> Datele de mai jos sunt demonstrative. Tot ce adaugi sau modifici se salvează privat, doar pentru tine.</p><button class="btn sm" data-act="clearSample">Pornește cu o canisă goală</button></div>`:'';h+=installBanner();
   if(!S.dogs.length)return h+`<div class="hello"><p class="eyebrow">${FW.format(new Date())}</p><h1>${hi}${S.kennel.owner?', '+esc(S.kennel.owner):''}</h1></div>
     <div class="panel empty big"><h3>Începe cu primul câine</h3><p>Adaugă datele din pedigree, microcipul și vaccinurile. Afix îți amintește apoi de rapeluri, deparazitări și călduri.</p><p style="margin-top:16px;justify-content:center" class="row-actions"><button class="btn" data-act="claim">Am un cod de la crescător</button><button class="btn primary" data-act="addDog">${I(IC.plus)} Adaugă un câine</button></p></div>`;
   const heroDog=S.dogs.find(d=>d.photoId);const heroImg=S.sample?'smp-hero':heroDog?.photoId;
@@ -223,6 +223,7 @@ function vSettings(){const k=S.kennel;
   <div class="list">${trs.length?trs.map(t=>`<button class="li" data-act="showCode" data-code="${esc(t.code)}"><span class="date">${fmt(t.createdAt)}</span><span><span class="t">${esc(t.label)}</span><br><span class="s mono">${esc(t.code)} · plătește ${t.payer==='breeder'?'crescătorul':'proprietarul'}</span></span><span class="pill ${t.claimedAt?'ok':'warn'}">${t.claimedAt?'activat '+fmtS(t.claimedAt.slice(0,10)):'în așteptare'}</span></button>`).join(''):'<p class="empty">Niciun transfer încă.</p>'}</div></section>`}
   <section class="panel"><h2>Datele tale</h2>
   <div class="setting-row"><p><b>Unde se salvează</b>${Store.mode==='cloud'?'În contul tău Afix, pe servere din Uniunea Europeană. Le vezi doar tu, de pe orice telefon pe care intri în cont.':'Doar în acest browser, pe acest dispozitiv.'}</p></div>
+  ${canOfferInstall()?`<div class="setting-row"><p><b>Instalează pe telefon</b>Pune Afix pe ecranul telefonului, ca pe orice aplicație.</p>${installButton()}</div>`:''}
   <div class="setting-row"><p><b>Copie de siguranță</b>Descarcă toate datele, inclusiv fotografiile, într-un fișier JSON.</p><button class="btn" data-act="export">Exportă</button></div>
   <div class="setting-row"><p><b>Restaurează</b>Încarcă un fișier exportat anterior. Înlocuiește datele actuale.</p><button class="btn" data-act="import">Importă</button></div>
   <div class="setting-row"><p><b>${S.sample?'Canisa exemplu':'Șterge tot'}</b>${S.sample?'Înlocuiește datele demonstrative cu o canisă goală.':'Șterge toți câinii, cuiburile și rezultatele.'}</p><button class="btn danger" data-act="clearSample">${S.sample?'Pornește de la zero':'Șterge datele'}</button></div>

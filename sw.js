@@ -1,12 +1,12 @@
 /* Afix service worker: keeps the app shell on the phone so it opens fast and offline.
    Bump VERSION whenever app files change, so phones pick up the new version. */
-const VERSION = 'afix-v1';
+const VERSION = 'afix-v2';
 const SHELL = [
   './',
   'index.html',
   'manifest.webmanifest',
   'css/app.css',
-  'js/config.js', 'js/util.js', 'js/domain.js', 'js/sample.js', 'js/store.js', 'js/reminders.js',
+  'js/config.js', 'js/util.js', 'js/install.js', 'js/domain.js', 'js/sample.js', 'js/store.js', 'js/reminders.js',
   'js/views.js', 'js/forms.js', 'js/account.js', 'js/transfer.js', 'js/app.js',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/apple-touch-icon.png', 'assets/icons/favicon.png',
   'assets/sample/aria.jpg', 'assets/sample/luna.jpg', 'assets/sample/mira.jpg', 'assets/sample/bruno.jpg', 'assets/sample/nova.jpg',

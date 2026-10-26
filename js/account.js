@@ -17,7 +17,8 @@ function vLogin(brand){
   return `<div class="welcome"><div class="wcard">${brand}
   <h1>${pendingCode?'Un cățel te așteaptă':'Tot ce ține de câinii tăi, într-un singur loc'}</h1>
   <p class="lead">${pendingCode?'Intră în cont ca să activezi fișa primită de la crescător.':'Pedigree, microcip, vaccinuri, expoziții, gestații și pui. Cu mementouri, ca să nu uiți nimic.'}</p>
-  <div class="panel stack" style="gap:12px">${step}${login.err?`<p class="err" style="color:var(--bad);font-weight:600;font-size:14px">${esc(login.err)}</p>`:''}</div></div>
+  <div class="panel stack" style="gap:12px">${step}${login.err?`<p class="err" style="color:var(--bad);font-weight:600;font-size:14px">${esc(login.err)}</p>`:''}</div>
+  ${installButton('btn')}</div>
   <div class="wvis"><img data-photo="smp-hero" alt="" hidden>
     <div class="float f1"><span class="fi">${I(REMIC.vaccin)}</span><span>Rapel antirabic · Aria<small>mâine, 10:00</small></span></div>
     <div class="float f2"><span class="fi">${I(IC.scale)}</span><span>Puiul roșu +38 g/zi<small>×3,7 față de naștere</small></span></div>
@@ -33,6 +34,7 @@ function vWelcome(){const brand='<div class="brand"><span class="mark">A</span><
   <div class="choices">${back?`<button class="choice primary" data-act="enter"><span class="ic">${I(IC.paw)}</span><span>Continuă${first?' ca '+esc(first):''}<small>${isOwnerRole()?'Profil de proprietar':'Profil de crescător'} · ${pl(S.dogs.length,'câine','câini')}</small></span>${I(ICH)}</button>`:''}
   <button class="choice${back||pendingCode?'':' primary'}" data-act="role" data-r="breeder"><span class="ic">${I(IC.nest)}</span><span>Sunt crescător<small>Câini, cuiburi, expoziții și transferul fișelor către noii proprietari</small></span>${I(ICH)}</button>
   <button class="choice${!back&&pendingCode?' primary':''}" data-act="role" data-r="owner"><span class="ic">${I(IC.paw)}</span><span>Am primit un cățel<small>${pendingCode?'Cod: '+esc(pendingCode.toUpperCase()):'Am un cod de transfer de la crescător'}</small></span>${I(ICH)}</button></div>
+  ${installButton('btn')}
   <p class="fine">${Store.mode==='cloud'?'Datele tale se salvează în contul tău și le vezi doar tu, de pe orice telefon.':'Datele tale se salvează doar în acest browser.'}</p></div>
   <div class="wvis"><img data-photo="smp-hero" alt="" hidden>
     <div class="float f1"><span class="fi">${I(REMIC.vaccin)}</span><span>Rapel antirabic · Aria<small>mâine, 10:00</small></span></div>
