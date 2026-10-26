@@ -74,6 +74,18 @@ as $$
   where t.id = p_id and auth.uid() is not null;
 $$;
 
+-- Setări generale ale aplicației, citite doar de funcțiile serverului.
+-- require_payment = false cât timp plățile online nu sunt încă legate;
+-- se trece pe true când procesatorul de plăți confirmă automat plățile:
+--   update public.app_settings set value = 'true' where key = 'require_payment';
+create table if not exists public.app_settings (
+  key   text primary key,
+  value jsonb not null
+);
+alter table public.app_settings enable row level security;
+insert into public.app_settings (key, value) values ('require_payment', 'false')
+on conflict (key) do nothing;
+
 -- Activarea: reușește o singură dată. Plata e confirmată separat,
 -- de procesatorul de plăți (pasul cu plăți), care setează paid = true.
 create or replace function public.claim_transfer(p_id text)
@@ -92,7 +104,8 @@ begin
      set claimed_by = auth.uid(), claimed_at = now()
    where id = p_id
      and claimed_at is null
-     and (paid or payer = 'breeder')
+     and (paid or payer = 'breeder'
+          or coalesce((select value::text::boolean from public.app_settings where key = 'require_payment'), true) = false)
   returning true into ok;
   return coalesce(ok, false);
 end;

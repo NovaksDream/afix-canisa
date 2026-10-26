@@ -15,10 +15,21 @@ async function codeKeys(code){const base=await crypto.subtle.importKey('raw',te.
   const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:te.encode('afix-transfer-key-v1'),iterations:150000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
   return {id,key}}
 async function seal(key,obj){const iv=crypto.getRandomValues(new Uint8Array(12));return {iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,te.encode(JSON.stringify(obj))))}}
+/* Transfer storage: Supabase table "transfers" (read and claimed only through
+   the get_transfer / claim_transfer functions), or this browser when offline. */
 const TR={
-  async put(id,doc){if(Store.db)await Store.db.doc('transfers/'+id).set(doc);else localStorage.setItem('afix-tr-'+id,JSON.stringify(doc))},
-  async get(id){if(Store.db){const s=await Store.db.doc('transfers/'+id).get();return s.exists?s.data():null}try{const r=localStorage.getItem('afix-tr-'+id);return r?JSON.parse(r):null}catch(e){return null}},
-  async mark(id,patch){if(Store.db)await Store.db.doc('transfers/'+id).update(patch);else{const d=await this.get(id);if(d)localStorage.setItem('afix-tr-'+id,JSON.stringify(Object.assign(d,patch)))}}
+  get cloud(){return Store.mode==='cloud'},
+  async put(id,doc){
+    if(this.cloud){const {error}=await Store.sb.from('transfers').insert({id,ciphertext:doc.ct,iv:doc.iv,payer:doc.payer,created_by:Store.user.id});if(error)throw error;return}
+    localStorage.setItem('afix-tr-'+id,JSON.stringify(doc))},
+  async get(id){
+    if(this.cloud){const {data,error}=await Store.sb.rpc('get_transfer',{p_id:id});if(error)throw error;const r=Array.isArray(data)?data[0]:data;
+      return r?{ct:r.ciphertext,iv:r.iv,payer:r.payer,paid:r.paid,claimedAt:r.claimed_at}:null}
+    try{const r=localStorage.getItem('afix-tr-'+id);return r?JSON.parse(r):null}catch(e){return null}},
+  async mark(id,patch){
+    if(this.cloud){const {data,error}=await Store.sb.rpc('claim_transfer',{p_id:id});if(error)throw error;
+      if(!data)throw {msg:'Activarea nu a fost permisă: codul a fost deja folosit sau plata nu a fost confirmată.'};return}
+    const d=await this.get(id);if(d)localStorage.setItem('afix-tr-'+id,JSON.stringify(Object.assign(d,patch)))}
 };
 async function buildPackage(L,p,o){const dam=dogById(L.damId),sire=dogById(L.sireId);const dn=k=>S.done['L:'+L.id+':'+k];
   const health=[];for(const k of ['dep2','dep4','dep6','dep8'])if(dn(k))health.push({id:uid(),kind:'depInt',sub:'Suspensie',date:dn(k),next:'',product:'',notes:'Deparazitare de pui, la crescător'});
@@ -28,7 +39,7 @@ async function buildPackage(L,p,o){const dam=dogById(L.damId),sire=dogById(L.sir
   const planned=[];if(o.nextVac)planned.push({id:uid(),due:o.nextVac,title:'Rapel vaccin de pui',sub:'programat de crescător'});
   if(o.nextDep)planned.push({id:uid(),due:o.nextDep,title:'Deparazitare internă',sub:'programată de crescător; la pui, la 2 săptămâni până la 3 luni'});
   planned.push({id:uid(),due:addDays(L.whelped,84),title:'Vaccin antirabic (de la 12 săptămâni)',sub:'obligatoriu, apoi anual'});
-  let photo=p.photoId?await Store.getPhoto(p.photoId):null;if(photo&&photo.length>150000)photo=null;
+  let photo=p.photoId?await Store.getPhotoData(p.photoId):null;if(photo&&photo.length>150000)photo=null;
   return {v:1,createdAt:today(),payer:o.payer,newOwner:o.newOwner||'',
     pup:{name:p.name||'',collar:p.collar,sex:p.sex,color:p.color,dob:L.whelped,chip:p.chip||'',birthWeight:p.birthWeight,weights:(p.weights||[]).map(w=>({date:w.date,kg:Math.round(w.g/10)/100})),photo},
     breed:dam?.breed||sire?.breed||'',sire:sire?(sire.regName||sire.name):(L.sireExt||''),dam:dam?(dam.regName||dam.name):'',parentTests:tests,health,planned,
@@ -91,15 +102,16 @@ function previewSheet(x){FORM={preview:true};const {pkg,doc}=x,p=pkg.pup,k=pkg.k
   ${mustPay?`<div class="price"><div><span>Activarea fișei digitale</span><br><span>plată unică, fără abonament</span></div><b>${PRICE} lei</b></div>`:`<p class="pill ok" style="align-self:flex-start">Activarea a fost plătită de crescător</p>`}</div>
   <footer><span class="sp"></span><button class="btn ghost" data-close>Mai târziu</button><button class="btn primary" id="actBtn">${mustPay?'Plătește și activează':'Activează fișa'}</button></footer></div></div>`;
   bindSheet();
-  $('#actBtn').onclick=async()=>{if(mustPay)paySheet({title:'Activează fișa',item:'Fișa digitală · '+nm,onPay:()=>completeClaim(x)});else{$('#actBtn').disabled=true;try{await completeClaim(x)}catch(e){toast('Activarea nu a reușit. Încearcă din nou.');$('#actBtn').disabled=false}}}}
+  $('#actBtn').onclick=async()=>{if(mustPay)paySheet({title:'Activează fișa',item:'Fișa digitală · '+nm,onPay:()=>completeClaim(x)});else{$('#actBtn').disabled=true;try{await completeClaim(x)}catch(e){console.warn(e);toast(e&&e.msg||'Activarea nu a reușit. Încearcă din nou.');$('#actBtn').disabled=false}}}}
 async function completeClaim({code,id,pkg}){const p=pkg.pup;
   const fresh=await TR.get(id);if(fresh&&fresh.claimedAt)throw {msg:'Codul a fost deja activat.'};
+  await TR.mark(id,{claimedAt:new Date().toISOString(),paid:true});
   let photoId='';if(p.photo){photoId=uid();await Store.putPhoto(photoId,p.photo)}
   if(!S.account){if(S.sample){const keep=S.transfers;S=emptyState()}S.account={role:'owner',since:today()}}
   const d={id:uid(),name:p.name||'Cățelul meu',regName:'',breed:pkg.breed||'',sex:p.sex,dob:p.dob,color:p.color||'',chip:p.chip||'',tattoo:'',passport:'',pedigreeNo:'',sire:pkg.sire||'',dam:pkg.dam||'',breeder:pkg.kennel?.name||'',owner:'',titles:'',status:'activ',notes:'',photoId,
     health:pkg.health||[],weights:p.weights||[],shows:[],heats:[],docs:[],planned:pkg.planned||[],
     origin:{kennel:pkg.kennel||{},message:pkg.message||'',food:pkg.food||'',feeding:pkg.feeding||'',parentTests:pkg.parentTests||[],transferredAt:today(),code}};
-  S.dogs.push(d);try{await TR.mark(id,{claimedAt:new Date().toISOString(),paid:true})}catch(e){console.warn(e)}
+  S.dogs.push(d);
   ui.locked=false;ui.view='dog';ui.dogId=d.id;ui.tab='profil';save();closeModal();toast(`Bine ai venit acasă, ${d.name}!`);
   if(!p.name)setTimeout(()=>dogForm(d),700)}
 let lastRefresh=0;
