@@ -6,8 +6,8 @@
    NU pune aici cheia „service_role” / „secret”: ea ocolește toate regulile de acces. */
 const AFIX_CONFIG = {
   supabase: {
-    url: '',
-    anonKey: ''
+    url: 'https://etfuxfenuzqpqeztezdb.supabase.co',
+    anonKey: 'sb_publishable_r7tbkMJC1XXgx3vmZPANcw_NvY8zCmL'
   },
   transferPrice: 19
 };

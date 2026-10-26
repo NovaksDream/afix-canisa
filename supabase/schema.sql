@@ -18,20 +18,24 @@ alter table public.kennel_state enable row level security;
 
 create policy "Fiecare își vede doar canisa"
   on public.kennel_state for select
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
 create policy "Fiecare își creează doar canisa"
   on public.kennel_state for insert
-  with check (auth.uid() = user_id);
+  to authenticated
+  with check ((select auth.uid()) = user_id);
 
 create policy "Fiecare își modifică doar canisa"
   on public.kennel_state for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create policy "Fiecare își șterge doar canisa"
   on public.kennel_state for delete
-  using (auth.uid() = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------
 -- 2. Transferurile de fișe către noii proprietari
@@ -55,11 +59,13 @@ alter table public.transfers enable row level security;
 -- Crescătorul își vede și își creează doar transferurile proprii.
 create policy "Crescătorul își vede transferurile"
   on public.transfers for select
-  using (auth.uid() = created_by);
+  to authenticated
+  using ((select auth.uid()) = created_by);
 
 create policy "Crescătorul creează transferuri"
   on public.transfers for insert
-  with check (auth.uid() = created_by and paid = false and claimed_at is null);
+  to authenticated
+  with check ((select auth.uid()) = created_by and paid = false and claimed_at is null);
 
 -- Noul proprietar NU poate lista transferurile. Le citește doar
 -- cunoscând id-ul (care se obține numai din cod), prin funcția de mai jos.
@@ -125,16 +131,20 @@ on conflict (id) do nothing;
 
 create policy "Fiecare își vede pozele"
   on storage.objects for select
-  using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+  to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 create policy "Fiecare își urcă pozele"
   on storage.objects for insert
-  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+  to authenticated
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 create policy "Fiecare își înlocuiește pozele"
   on storage.objects for update
-  using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+  to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 create policy "Fiecare își șterge pozele"
   on storage.objects for delete
-  using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+  to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = (select auth.uid())::text);

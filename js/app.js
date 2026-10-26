@@ -83,4 +83,5 @@ function boot(data){if(booted)return;booted=true;Store.ready=true;
   if(Store.offline)toast('Nu am putut încărca datele din cont. Lucrezi pe acest dispozitiv.');
   refreshTransfers().catch(()=>{})}
 Store.init().then(boot,e=>{console.warn(e);boot(null)});
+if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e)));
 setTimeout(()=>{if(!booted){Store.mode='local';Store.needsLogin=false;Store.offline=true;let d=null;try{const r=localStorage.getItem('afix-state');if(r)d=JSON.parse(r)}catch(e){}boot(d)}},20000);
