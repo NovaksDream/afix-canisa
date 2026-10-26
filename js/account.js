@@ -4,39 +4,47 @@ let pendingCode=(location.hash.match(/^#(AFX-[A-Z0-9]{4}-[A-Z0-9]{4})$/i)||[])[1
 const ICH='<path d="m9 5 7 7-7 7"/>';
 function whoRow(){const me=Store.me;const name=me?.name||'';const av=me?.avatarUrl;
   return `<div class="who">${av?`<img src="${esc(av)}" alt="">`:`<span class="av" style="--h:var(--accent);width:40px;height:40px;font-size:18px">A</span>`}<div><small>Conectat securizat</small><b>${esc(name||'Contul tău')}</b></div><span class="lock" title="Conexiune securizată">${I('<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>')}</span></div>`}
+
+/* The opening screen is one fixed phone screen: photo on top, short message,
+   then the one thing to do (email, code or role). Nothing scrolls. */
+const ROT_WORDS=['vaccinuri','deparazitări','călduri','cântăriri','expoziții'];
+function welcomeShell(title,lead,body){
+  const words=ROT_WORDS.concat(ROT_WORDS[0]).map(w=>`<span>${w}</span>`).join('');
+  return `<div class="wl">
+  <div class="wl-hero"><img data-photo="smp-hero" alt="" hidden>
+    ${canOfferInstall()?`<button class="wl-install" data-act="install">${I(INSTALL_ICON)} Instalează aplicația</button>`:''}
+    <div class="wl-chips">
+      <div class="wl-chip c1"><span class="fi">${I(REMIC.vaccin)}</span><span>Rapel antirabic · Aria<small>mâine</small></span></div>
+      <div class="wl-chip c2"><span class="fi">${I(IC.scale)}</span><span>Puiul roșu +38 g/zi<small>crește frumos</small></span></div>
+      <div class="wl-chip c3"><span class="fi">${I(IC.ribbon)}</span><span>CACIB · BOB<small>Timișoara</small></span></div>
+    </div></div>
+  <div class="wl-body">
+    <div class="wl-brand"><span class="mark">A</span><b>Afix</b></div>
+    <h1>${title||`Nu mai uiți de<br><span class="rot" aria-label="vaccinuri, deparazitări, călduri, cântăriri, expoziții"><span class="rot-in">${words}</span></span>`}</h1>
+    ${lead?`<p class="wl-lead">${lead}</p>`:''}
+    ${body}
+  </div></div>`}
+
 /* email login: Supabase sends a 6-digit code (and a link) to the address */
 const login={email:'',sent:false,busy:false,err:''};
-function vLogin(brand){
-  const step=login.sent
-    ?`<label class="field"><span>Codul din e-mail</span><input id="loginCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="ex: 123456" style="font-size:22px;letter-spacing:.2em;text-align:center"></label>
-      <button class="btn primary" data-act="verifyCode" style="width:100%;padding:14px"${login.busy?' disabled':''}>${login.busy?'Se verifică…':'Intră în cont'}</button>
-      <p class="fine">Am trimis codul la <b>${esc(login.email)}</b>. Poți apăsa și pe linkul din e-mail. Nu îl găsești? Uită-te și în Spam. <button class="btn ghost sm" data-act="changeEmail">Altă adresă</button></p>`
-    :`<label class="field"><span>Adresa ta de e-mail</span><input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="nume@exemplu.ro" value="${esc(login.email)}"></label>
-      <button class="btn primary" data-act="sendCode" style="width:100%;padding:14px"${login.busy?' disabled':''}>${login.busy?'Se trimite…':'Trimite-mi codul'}</button>
-      <p class="fine">Fără parolă: îți trimitem un cod pe e-mail de fiecare dată când intri de pe un telefon nou.</p>`;
-  return `<div class="welcome"><div class="wcard">${brand}
-  <h1>${pendingCode?'Un cățel te așteaptă':'Tot ce ține de câinii tăi, într-un singur loc'}</h1>
-  <p class="lead">${pendingCode?'Intră în cont ca să activezi fișa primită de la crescător.':'Pedigree, microcip, vaccinuri, expoziții, gestații și pui. Cu mementouri, ca să nu uiți nimic.'}</p>
-  <div class="panel stack" style="gap:12px">${step}${login.err?`<p class="err" style="color:var(--bad);font-weight:600;font-size:14px">${esc(login.err)}</p>`:''}</div>
-  ${installButton('btn')}</div>
-  <div class="wvis"><img data-photo="smp-hero" alt="" hidden>
-    <div class="float f1"><span class="fi">${I(REMIC.vaccin)}</span><span>Rapel antirabic · Aria<small>mâine, 10:00</small></span></div>
-    <div class="float f2"><span class="fi">${I(IC.scale)}</span><span>Puiul roșu +38 g/zi<small>×3,7 față de naștere</small></span></div>
-    <div class="float f3"><span class="fi">${I(IC.ribbon)}</span><span>CACIB · BOB · BOG 2<small>Expoziția de la Timișoara</small></span></div></div></div>`}
-function vWelcome(){const brand='<div class="brand"><span class="mark">A</span><div><b>Afix</b><small>Carnetul canisei</small></div></div>';
-  if(!Store.ready)return `<div class="welcome"><div class="wcard">${brand}<p class="muted">Se verifică contul…</p></div></div>`;
-  if(Store.needsLogin)return vLogin(brand);
-  const back=!!S.account;const first=(Store.me?.name||'').split(' ')[0];
-  return `<div class="welcome"><div class="wcard">${brand}
-  <h1>${back?'Bine ai revenit'+(first?', '+esc(first):''):pendingCode?'Un cățel te așteaptă':'Tot ce ține de câinii tăi, într-un singur loc'}</h1>
-  <p class="lead">${back?'Datele tale sunt salvate și te așteaptă.':pendingCode?'Crescătorul ți-a trimis fișa digitală a cățelului. Intră ca proprietar ca să o activezi.':'Pedigree, microcip, vaccinuri, expoziții, gestații și pui. Cu mementouri, ca să nu uiți nimic.'}</p>
-  ${whoRow()}
-  <div class="choices">${back?`<button class="choice primary" data-act="enter"><span class="ic">${I(IC.paw)}</span><span>Continuă${first?' ca '+esc(first):''}<small>${isOwnerRole()?'Profil de proprietar':'Profil de crescător'} · ${pl(S.dogs.length,'câine','câini')}</small></span>${I(ICH)}</button>`:''}
-  <button class="choice${back||pendingCode?'':' primary'}" data-act="role" data-r="breeder"><span class="ic">${I(IC.nest)}</span><span>Sunt crescător<small>Câini, cuiburi, expoziții și transferul fișelor către noii proprietari</small></span>${I(ICH)}</button>
-  <button class="choice${!back&&pendingCode?' primary':''}" data-act="role" data-r="owner"><span class="ic">${I(IC.paw)}</span><span>Am primit un cățel<small>${pendingCode?'Cod: '+esc(pendingCode.toUpperCase()):'Am un cod de transfer de la crescător'}</small></span>${I(ICH)}</button></div>
-  ${installButton('btn')}
-  <p class="fine">${Store.mode==='cloud'?'Datele tale se salvează în contul tău și le vezi doar tu, de pe orice telefon.':'Datele tale se salvează doar în acest browser.'}</p></div>
-  <div class="wvis"><img data-photo="smp-hero" alt="" hidden>
-    <div class="float f1"><span class="fi">${I(REMIC.vaccin)}</span><span>Rapel antirabic · Aria<small>mâine, 10:00</small></span></div>
-    <div class="float f2"><span class="fi">${I(IC.scale)}</span><span>Puiul roșu +38 g/zi<small>×3,7 față de naștere</small></span></div>
-    <div class="float f3"><span class="fi">${I(IC.ribbon)}</span><span>CACIB · BOB · BOG 2<small>Expoziția de la Timișoara</small></span></div></div></div>`}
+function vLogin(){
+  const err=login.err?`<p class="wl-err">${esc(login.err)}</p>`:'';
+  const body=login.sent
+    ?`<input class="wl-input code" id="loginCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="••••••" aria-label="Codul din e-mail">
+      <button class="wl-cta" data-act="verifyCode"${login.busy?' disabled':''}>${login.busy?'Se verifică…':'Intră în cont'}</button>${err}
+      <p class="wl-fine">Codul a plecat spre <b>${esc(login.email)}</b>. Nu îl vezi? Caută în Spam. <button class="wl-link" data-act="changeEmail">Altă adresă</button></p>`
+    :`<input class="wl-input" id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="adresa ta de e-mail" value="${esc(login.email)}" aria-label="Adresa de e-mail">
+      <button class="wl-cta" data-act="sendCode"${login.busy?' disabled':''}>${login.busy?'Se trimite…':'Intră cu un cod pe e-mail'}</button>${err}
+      <p class="wl-fine">Fără parolă. Datele tale rămân private.</p>`;
+  return welcomeShell(pendingCode?'Un cățel te așteaptă':'',pendingCode?'Intră în cont ca să activezi fișa primită de la crescător.':'Carnetul digital al canisei tale.',body)}
+
+function vWelcome(){
+  if(!Store.ready)return welcomeShell('','Se pregătește canisa…','<div class="wl-loading"><span></span><span></span><span></span></div>');
+  if(Store.needsLogin)return vLogin();
+  const back=!!S.account;const first=(Store.me?.name||'').split(/[ @]/)[0];
+  const ch=(act,r,cls,ic,t,s)=>`<button class="wl-choice${cls}" data-act="${act}"${r?` data-r="${r}"`:''}><span class="ic">${I(ic)}</span><span>${t}<small>${s}</small></span>${I(ICH)}</button>`;
+  let body='';
+  if(back)body+=ch('enter','',' primary',IC.paw,'Continuă',`${isOwnerRole()?'Proprietar':'Crescător'} · ${pl(S.dogs.length,'câine','câini')}`);
+  if(!back||!isOwnerRole())body+=ch('role','breeder',back||pendingCode?'':' primary',IC.nest,back?'Profil de crescător':'Sunt crescător','Câini, cuiburi, expoziții, transferuri');
+  body+=ch('role','owner',!back&&pendingCode?' primary':'',IC.paw,'Am primit un cățel',pendingCode?'Cod: '+esc(pendingCode.toUpperCase()):'Am un cod de la crescător');
+  return welcomeShell(back?'Bine ai revenit'+(first?', '+esc(first):''):pendingCode?'Un cățel te așteaptă':'',back?'':'Carnetul digital al canisei tale.',`<div class="wl-choices">${body}</div>`)}

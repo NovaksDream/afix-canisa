@@ -31,7 +31,6 @@ const A={
     catch(e){console.warn(e);login.busy=false;login.err='Codul nu e corect sau a expirat. Cere un cod nou.';render()}},
   changeEmail:()=>{login.sent=false;login.err='';render()},
   install:()=>doInstall(),
-  hideInstall:()=>{try{localStorage.setItem('afix-install-hide','1')}catch(e){}render()},
   role:el=>{const r=el.dataset.r;
     if(el.dataset.switch){S.account.role=r;if(r==='owner'&&ui.view==='litters')ui.view='home';save();toast(r==='owner'?'Profil de proprietar':'Profil de crescător');return}
     if(!S.account){if(r==='owner'&&S.sample)S=emptyState();S.account={role:r,since:today()}}else if(r==='breeder')S.account.role='breeder';

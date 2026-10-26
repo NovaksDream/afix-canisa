@@ -1,6 +1,6 @@
 /* Afix service worker: keeps the app shell on the phone so it opens fast and offline.
    Bump VERSION whenever app files change, so phones pick up the new version. */
-const VERSION = 'afix-v2';
+const VERSION = 'afix-v3';
 const SHELL = [
   './',
   'index.html',

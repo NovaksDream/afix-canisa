@@ -14,11 +14,11 @@ window.addEventListener('appinstalled',()=>{installPrompt=null;if(typeof toast==
 
 const canOfferInstall=()=>!isStandalone();
 function installButton(cls='btn'){return canOfferInstall()?`<button class="${cls}" data-act="install">${I(INSTALL_ICON)} Instalează aplicația</button>`:''}
-function installBanner(){
-  if(!canOfferInstall())return '';
-  try{if(localStorage.getItem('afix-install-hide'))return ''}catch(e){}
-  return `<div class="banner install-banner"><span class="ib-ic">${I(INSTALL_ICON)}</span><p><b>Pune Afix pe ecranul telefonului.</b> Se deschide ca o aplicație, pe tot ecranul, și merge și fără semnal.</p>
-  <div class="row-actions"><button class="btn sm primary" data-act="install">Instalează</button><button class="btn sm ghost" data-act="hideInstall">Mai târziu</button></div></div>`}
+/* thin bar pinned to the top of every app page until Afix is installed */
+function renderInstallBar(){const el=document.getElementById('installBar');if(!el)return;
+  const show=canOfferInstall();if(show===(el.dataset.shown==='1'))return;el.dataset.shown=show?'1':'0';
+  el.innerHTML=show?`<div class="install-bar"><img src="assets/icons/icon-192.png" alt=""><span><b>Afix pe telefonul tău</b><small>Gratuit · se deschide ca o aplicație</small></span><button data-act="install">Instalează</button></div>`:'';
+  const st=document.getElementById('stickyTop');if(st)document.documentElement.style.setProperty('--sticky-h',st.offsetHeight+'px')}
 
 async function doInstall(){
   if(installPrompt){const p=installPrompt;installPrompt=null;p.prompt();try{await p.userChoice}catch(e){}render();return}

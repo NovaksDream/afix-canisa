@@ -16,7 +16,7 @@ function render(){
   const vk=locked?'welcome':ui.view+':'+(ui.dogId||'')+':'+(ui.litterId||'')+':'+ui.tab;const vw=$('#view');
   if(vk!==lastVK){vw.classList.remove('enter');void vw.offsetWidth;vw.classList.add('enter');lastVK=vk;clearTimeout(enterT);enterT=setTimeout(()=>vw.classList.remove('enter'),900)}
   if(locked){vw.innerHTML=vWelcome();hydrate();return}
-  renderNav(late);
+  renderNav(late);renderInstallBar();
   const v=ui.view;let h='';
   if(v==='home')h=vHome(R);else if(v==='dogs')h=vDogs();else if(v==='dog')h=vDog(R);else if(v==='litters')h=vLitters();
   else if(v==='litter')h=vLitter();else if(v==='calendar')h=vCal(R);else if(v==='shows')h=vShows();else h=vSettings();
@@ -36,7 +36,7 @@ function vHome(R){
   const own=S.dogs.filter(d=>d.status==='activ');const pups=nests.reduce((a,L)=>a+L.puppies.length,0);
   const yr=String(new Date().getFullYear());const wins=S.dogs.reduce((a,d)=>a+(d.shows||[]).filter(s=>s.date.startsWith(yr)).length,0);
   const late=R.filter(r=>diff(T,r.due)<0).length;
-  let h=S.sample?`<div class="banner"><p><b>Canisă exemplu.</b> Datele de mai jos sunt demonstrative. Tot ce adaugi sau modifici se salvează privat, doar pentru tine.</p><button class="btn sm" data-act="clearSample">Pornește cu o canisă goală</button></div>`:'';h+=installBanner();
+  let h=S.sample?`<div class="banner"><p><b>Canisă exemplu.</b> Datele de mai jos sunt demonstrative. Tot ce adaugi sau modifici se salvează privat, doar pentru tine.</p><button class="btn sm" data-act="clearSample">Pornește cu o canisă goală</button></div>`:'';
   if(!S.dogs.length)return h+`<div class="hello"><p class="eyebrow">${FW.format(new Date())}</p><h1>${hi}${S.kennel.owner?', '+esc(S.kennel.owner):''}</h1></div>
     <div class="panel empty big"><h3>Începe cu primul câine</h3><p>Adaugă datele din pedigree, microcipul și vaccinurile. Afix îți amintește apoi de rapeluri, deparazitări și călduri.</p><p style="margin-top:16px;justify-content:center" class="row-actions"><button class="btn" data-act="claim">Am un cod de la crescător</button><button class="btn primary" data-act="addDog">${I(IC.plus)} Adaugă un câine</button></p></div>`;
   const heroDog=S.dogs.find(d=>d.photoId);const heroImg=S.sample?'smp-hero':heroDog?.photoId;
