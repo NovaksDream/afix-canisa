@@ -6,10 +6,31 @@ function fieldHTML(f,v){const id='f_'+f.k,cls=`field${f.half?' half':''}${f.mono
   if(f.type==='select')return `<label class="${cls}">${lab}<select id="${id}">${f.options.map(o=>{const [val,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}"${String(v??'')===String(val)?' selected':''}>${esc(l)}</option>`}).join('')}</select>${hint}${err}</label>`;
   if(f.type==='textarea')return `<label class="${cls}">${lab}<textarea id="${id}" placeholder="${esc(f.placeholder||'')}">${esc(v||'')}</textarea>${hint}${err}</label>`;
   if(f.type==='chips')return `<fieldset class="${cls}"><legend>${esc(f.label)}</legend><div class="chipset">${f.options.map(o=>`<label class="chip-opt"><input type="checkbox" name="${id}" value="${esc(o)}"${(v||[]).includes(o)?' checked':''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
+  if(f.type==='breeds'){const sel=new Set(v||[]);
+    return `<fieldset class="field bp" id="bp_${f.k}"><legend>${esc(f.label)}</legend>${hint}
+    <div class="bp-sel" id="bpsel_${f.k}"></div>
+    <input type="search" id="bps_${f.k}" class="bp-search" placeholder="Caută rasa: ciobănesc, golden, teckel…" autocomplete="off" enterkeyhint="search">
+    <div class="bp-list">${FCI_GROUPS.map(g=>`<div class="bp-g"><div class="bp-gh"><span>Grupa ${g.n}</span>${esc(g.name)}</div>${g.breeds.map(b=>`<label class="bp-item" data-s="${esc(b[3])}" data-num="${b[0]}"><input type="checkbox" name="${id}" value="${esc(b[1])}"${sel.has(b[1])?' checked':''}><span>${esc(b[1])}${b[2]?`<small>${esc(b[2])}</small>`:''}</span><em>FCI ${b[0]}</em></label>`).join('')}</div>`).join('')}
+    <p class="bp-none" hidden>Nicio rasă găsită. Încearcă alt cuvânt sau numele în engleză.</p></div></fieldset>`}
   if(f.type==='photo')return `<label class="${cls} photo">${lab}<div class="drop" id="d_${f.k}">${v?`<img data-photo="${esc(v)}" alt="" hidden>`:''}<span class="hint ph">${I(IC.cam)}${v?'Se încarcă…':'Alege o fotografie sau un scan'}</span></div><input type="file" accept="image/*" id="${id}">${hint}${err}</label>`;
   if(f.type==='weigh')return `<div class="wrow"><span class="collar lg" style="--c:${collarC(f.collar)}"></span><label for="${id}" style="font-weight:600">${esc(f.label)}<br><span class="muted" style="font-weight:400;font-size:12.5px">${esc(f.hint||'')}</span></label><input id="${id}" type="number" inputmode="numeric" min="0" step="1" value="${esc(v??'')}" placeholder="grame"></div>`;
   const dl=f.list?`<datalist id="dl_${f.k}">${f.list.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:'';
   return `<label class="${cls}">${lab}<input id="${id}" type="${f.type||'text'}"${f.type==='number'?` step="${f.step||'any'}" inputmode="decimal"`:''}${f.inputmode?` inputmode="${f.inputmode}"`:''}${f.list?` list="dl_${f.k}"`:''} value="${esc(v??'')}" placeholder="${esc(f.placeholder||'')}" autocomplete="off">${dl}${hint}${err}</label>`}
+/* multi-select of FCI breeds: search box, list grouped by FCI group, chosen breeds as chips */
+const foldTxt=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function wireBreedPicker(k){
+  const box=$('#bp_'+k),q=$('#bps_'+k),selEl=$('#bpsel_'+k),none=box.querySelector('.bp-none');
+  const upd=()=>{const vals=[...box.querySelectorAll('.bp-item input:checked')].map(i=>i.value);
+    selEl.innerHTML=vals.length?vals.map(v=>`<button type="button" class="bp-chip" data-v="${esc(v)}">${esc(v)}<span aria-hidden="true">×</span></button>`).join(''):'<span class="hint">Nicio rasă aleasă încă. Bifează din listă.</span>'};
+  box.addEventListener('change',e=>{if(e.target.type==='checkbox')upd()});
+  selEl.addEventListener('click',e=>{const b=e.target.closest('.bp-chip');if(!b)return;const cb=[...box.querySelectorAll('.bp-item input')].find(i=>i.value===b.dataset.v);if(cb){cb.checked=false;upd()}});
+  q.addEventListener('input',()=>{const t=foldTxt(q.value.trim());let total=0;
+    box.querySelectorAll('.bp-g').forEach(g=>{let n=0;g.querySelectorAll('.bp-item').forEach(it=>{const show=!t||it.dataset.s.includes(t)||it.dataset.num===t;it.hidden=!show;if(show)n++});g.hidden=!n;total+=n});
+    none.hidden=total>0});
+  q.addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault()});
+  upd()}
+/* breeds offered when adding a dog: the kennel's own breeds first, then all FCI breeds */
+function breedOptions(){const own=S.kennel.breeds||[];return [...own,...FCI_ALL.map(b=>b.name).filter(n=>!own.includes(n))]}
 function openForm(o){
   const vals=Object.assign({},o.values||{});FORM={o,photos:{}};
   $('#modal').innerHTML=`<div class="scrim" data-scrim><form class="sheet" id="sheet" novalidate><header><h2>${esc(o.title)}</h2><button type="button" class="icon-btn" data-close aria-label="Închide">${I(IC.x)}</button></header>
@@ -19,9 +40,10 @@ function openForm(o){
   const form=$('#sheet');
   for(const f of o.fields)if(f.type==='photo'){const inp=$('#f_'+f.k);inp.addEventListener('change',async()=>{const file=inp.files[0];if(!file)return;const drop=$('#d_'+f.k);drop.innerHTML='<span class="hint">Se procesează…</span>';
     try{const data=await compress(file,f.max||1600);FORM.photos[f.k]=data;drop.innerHTML=`<img src="${data}" alt="">`}catch(e){drop.innerHTML='<span class="hint">Nu am putut citi imaginea. Încearcă un JPG sau PNG.</span>'}})}
+  for(const f of o.fields)if(f.type==='breeds')wireBreedPicker(f.k);
   if(o.onInput){const get=k=>{const el=$('#f_'+k);return el?el.value:''};const set=(k,v)=>{const el=$('#f_'+k);if(el)el.value=v};form.addEventListener('input',e=>o.onInput(e.target.id.replace(/^f_/,''),get,set));form.addEventListener('change',e=>o.onInput(e.target.id.replace(/^f_/,''),get,set))}
   form.addEventListener('submit',async e=>{e.preventDefault();const out={};let ok=true;
-    for(const f of o.fields){if(f.type==='chips'){out[f.k]=[...form.querySelectorAll(`input[name="f_${f.k}"]:checked`)].map(i=>i.value);continue}
+    for(const f of o.fields){if(f.type==='chips'||f.type==='breeds'){out[f.k]=[...form.querySelectorAll(`input[name="f_${f.k}"]:checked`)].map(i=>i.value);continue}
       if(f.type==='photo'){out[f.k]=FORM.photos[f.k]||null;out['_old_'+f.k]=vals[f.k]||'';if(f.required&&!out[f.k]&&!vals[f.k]){showErr(f.k,'Adaugă o fotografie.');ok=false}continue}
       const el=$('#f_'+f.k);let v=el?el.value.trim():'';out[f.k]=v;const er=$('#e_'+f.k);if(er)er.hidden=true;
       if(f.required&&!v){showErr(f.k,'Câmp obligatoriu.');ok=false;continue}
@@ -69,7 +91,7 @@ const clean=o=>{const r={};for(const k in o)if(!k.startsWith('_old_'))r[k]=o[k];
 const dogFields=()=>[
   {k:'photoId',label:'Fotografie',type:'photo',max:900},
   {k:'name',label:'Nume de apel',required:true,half:true,placeholder:'ex: Aria'},{k:'regName',label:'Nume în pedigree',half:true,placeholder:'ex: Aria din Valea Luminii'},
-  {k:'breed',label:'Rasă',half:true,list:BREEDS},{k:'sex',label:'Sex',type:'select',options:[['F','Femelă'],['M','Mascul']],half:true},
+  {k:'breed',label:'Rasă',half:true,list:breedOptions(),placeholder:'Scrie sau alege rasa'},{k:'sex',label:'Sex',type:'select',options:[['F','Femelă'],['M','Mascul']],half:true},
   {k:'dob',label:'Data nașterii',type:'date',half:true},{k:'color',label:'Culoare / marcaje',half:true},
   {k:'chip',label:'Număr microcip',half:true,mono:true,inputmode:'numeric',placeholder:'642 …',hint:'15 cifre, standard ISO. 642 = România.',validate:v=>/^\d{15}$/.test(v.replace(/\s/g,''))?null:'Microcipul ISO are exact 15 cifre.'},
   {k:'pedigreeNo',label:'Nr. pedigree / registru',half:true,mono:true,placeholder:'ex: LOR 21457'},
@@ -80,7 +102,7 @@ const dogFields=()=>[
   {k:'status',label:'Statut',type:'select',half:true,options:[['activ','Activ în canisă'],['retras','Retras din reproducție'],['vândut','Vândut / plecat'],['decedat','Decedat']]},
   {k:'heatInterval',label:'Interval călduri (zile, femele)',type:'number',half:true,placeholder:'180'},
   {k:'notes',label:'Note',type:'textarea',placeholder:'Temperament, alimentație, observații'}];
-function dogForm(d){openForm({title:d?'Editează '+d.name:'Câine nou',fields:dogFields(),values:d||{sex:'F',status:'activ',breed:S.dogs[0]?.breed||'',owner:S.kennel.owner},
+function dogForm(d){openForm({title:d?'Editează '+d.name:'Câine nou',fields:dogFields(),values:d||{sex:'F',status:'activ',breed:S.kennel.breeds?.[0]||S.dogs[0]?.breed||'',owner:S.kennel.owner},
   onSave:async out=>{out.photoId=await storePhoto(out,'photoId');out.chip=out.chip.replace(/\s/g,'');const v=clean(out);
     if(d)Object.assign(d,v);else{const nd=Object.assign({id:uid(),health:[],weights:[],shows:[],heats:[],docs:[]},v);S.dogs.push(nd);ui.view='dog';ui.dogId=nd.id;ui.tab='profil'}save();toast(d?'Fișa a fost actualizată':'Câine adăugat')},
   onDelete:d?async()=>{S.dogs=S.dogs.filter(x=>x!==d);if(d.photoId)Store.delPhoto(d.photoId);for(const x of d.docs||[])Store.delPhoto(x.photoId);ui.view='dogs';save();toast('Câine șters')}:null,deleteMsg:d?`Ștergi fișa lui ${d.name} cu tot istoricul?`:''})}
@@ -147,5 +169,5 @@ function weighForm(L){const date=today();openForm({title:'Cântărire cuib',intr
   values:Object.fromEntries([['date',date],...L.puppies.map(p=>[('p_'+p.id),(p.weights||[]).find(w=>w.date===date)?.g??''])]),saveLabel:'Salvează cântărirea',
   onSave:out=>{let n=0;for(const p of L.puppies){const g=Number(out['p_'+p.id]);if(!g)continue;const ex=p.weights.find(w=>w.date===out.date);if(ex)ex.g=g;else p.weights.push({date:out.date,g});n++}
     save();const drops=L.puppies.filter(p=>pupStats(p,L).flag.includes('Scădere'));toast(drops.length?`Atenție: ${drops.map(p=>p.collar).join(', ')} a scăzut în greutate`:`${pl(n,'pui cântărit','pui cântăriți')}`)}})}
-function kennelForm(){openForm({title:'Canisa ta',fields:[{k:'name',label:'Numele canisei',required:true},{k:'affix',label:'Afix (sufix / prefix FCI)',half:true,placeholder:'ex: din Valea Luminii'},{k:'owner',label:'Numele tău',half:true},{k:'city',label:'Localitate',half:true},{k:'club',label:'Club de rasă',half:true},{k:'phone',label:'Telefon de contact',half:true,hint:'Apare pe fișa trimisă noilor proprietari.'},{k:'email',label:'E-mail de contact',half:true},{k:'heatInterval',label:'Interval implicit între călduri (zile)',type:'number',half:true,hint:'Majoritatea femelelor: 180–210 zile.'}],
+function kennelForm(){openForm({title:'Canisa ta',fields:[{k:'name',label:'Numele canisei',required:true},{k:'breeds',label:'Rasele pe care le crești',type:'breeds',hint:'Poți alege mai multe. Lista oficială FCI, pe cele 10 grupe.'},{k:'affix',label:'Afix (sufix / prefix FCI)',half:true,placeholder:'ex: din Valea Luminii'},{k:'owner',label:'Numele tău',half:true},{k:'city',label:'Localitate',half:true},{k:'club',label:'Club de rasă',half:true},{k:'phone',label:'Telefon de contact',half:true,hint:'Apare pe fișa trimisă noilor proprietari.'},{k:'email',label:'E-mail de contact',half:true},{k:'heatInterval',label:'Interval implicit între călduri (zile)',type:'number',half:true,hint:'Majoritatea femelelor: 180–210 zile.'}],
   values:S.kennel,onSave:out=>{Object.assign(S.kennel,out,{heatInterval:Number(out.heatInterval)||180});save()}})}

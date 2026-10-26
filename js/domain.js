@@ -35,6 +35,5 @@ const SHOW_TITLES=['CAC','R.CAC','CACIB','R.CACIB','CAJC','CAVC','BOB','BOS','Be
 const SHOW_CLASSES=['Baby (3–6 luni)','Puppy (6–9 luni)','Junior (9–18 luni)','Intermediară (15–24 luni)','Deschisă (15+ luni)','Lucru','Campioni','Veterani (8+ ani)'];
 const GRADES=['Excelent','Foarte bun','Bun','Suficient','Descalificat','Nu poate fi judecat','Foarte promițător','Promițător','Nepromițător'];
 const SHOW_TYPES=['CACIB (internațională)','CAC (națională)','Specială de rasă','Expoziția clubului','Concurs de lucru / sport'];
-const BREEDS=['Golden Retriever','Labrador Retriever','Ciobănesc German','Ciobănesc Românesc Carpatin','Ciobănesc Românesc Mioritic','Ciobănesc de Bucovina','Bichon Maltez','Bichon Frisé','Caniche','Yorkshire Terrier','Chihuahua','Cavalier King Charles','Bulldog Francez','Bulldog Englez','Rottweiler','Doberman','Cane Corso','Samoyed','Husky Siberian','Border Collie','Shih Tzu','Pomeranian (Spitz pitic)','Akita Inu','Shiba Inu','Beagle','Teckel','Boxer','Dog German','Bernez','Pug'];
 const PUP_STATUS=['Disponibil','Rezervat','Vândut','Rămâne în canisă'];
 const pupPill=s=>({'Disponibil':'acc','Rezervat':'warn','Vândut':'ok','Rămâne în canisă':'gold'}[s]||'');

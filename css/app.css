@@ -604,3 +604,21 @@ body.locked .col{overflow:hidden}
 @keyframes dot{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-6px);opacity:1}}
 @media (max-height:660px){.wl-lead{display:none}.wl h1{font-size:28px}.wl-body{padding:14px 18px 16px;gap:10px}.wl-choice{padding:10px 12px}}
 @media (prefers-reduced-motion:reduce){.wl-hero>img,.wl-chip,.rot-in,.wl-install,.install-bar button,.install-bar{animation:none!important}.wl-chip.c1{opacity:1}}
+
+/* ===== FCI breed picker ===== */
+.bp{gap:8px}
+.bp-sel{display:flex;flex-wrap:wrap;gap:6px;min-height:28px;align-items:center}
+.bp-chip{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:6px 8px 6px 12px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13px;cursor:pointer;animation:fadeIn .25s var(--ease)}
+.bp-chip span{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.22);font-size:14px;line-height:1}
+.bp-search{width:100%;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--bg);padding:0 14px;font-size:16px}
+.bp-search:focus{outline:2px solid var(--accent);border-color:transparent}
+.bp-list{max-height:min(46dvh,380px);overflow-y:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);overscroll-behavior:contain}
+.bp-gh{position:sticky;top:0;z-index:1;display:flex;gap:8px;align-items:baseline;padding:8px 12px;background:var(--surface-2);font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.3}
+.bp-gh span{flex:none;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:800}
+.bp-item{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer}
+.bp-item input{width:20px;height:20px;accent-color:var(--accent);margin:0}
+.bp-item span{font-weight:600;font-size:14.5px;line-height:1.25}
+.bp-item small{display:block;font-weight:400;font-size:12px;color:var(--ink-3)}
+.bp-item em{font-style:normal;font-size:11px;color:var(--ink-3);font-family:var(--mono)}
+.bp-item:has(input:checked){background:var(--accent-soft)}
+.bp-none{padding:16px;text-align:center;color:var(--ink-3);margin:0}

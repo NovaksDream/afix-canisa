@@ -45,6 +45,6 @@ function makeSample(){
   aria.photoId='smp-aria';luna.photoId='smp-luna';mira.photoId='smp-mira';bruno.photoId='smp-bruno';nova.photoId='smp-nova';
   L1.puppies[0].photoId='smp-pup3';L1.puppies[2].photoId='smp-pup1';L1.puppies[5].photoId='smp-pup2';
   const done={};done['L:'+L1.id+':anunt']=d(-20);done['L:'+L1.id+':dep2']=d(-9);done['L:'+L2.id+':decl']=d(-36);
-  return {v:1,sample:true,kennel:{name:'Canisa Valea Luminii',affix:'din Valea Luminii',owner:'Andreea',city:'Brașov',club:'Clubul Retrieverilor',phone:'0740 000 000',email:'contact@exemplu.ro',heatInterval:180},dogs:[aria,luna,mira,bruno,nova],litters:[L1,L2],done,transfers:[]};
+  return {v:1,sample:true,kennel:{name:'Canisa Valea Luminii',affix:'din Valea Luminii',owner:'Andreea',city:'Brașov',club:'Clubul Retrieverilor',breeds:['Golden Retriever'],phone:'0740 000 000',email:'contact@exemplu.ro',heatInterval:180},dogs:[aria,luna,mira,bruno,nova],litters:[L1,L2],done,transfers:[]};
 }
-const emptyState=()=>({v:1,sample:false,kennel:{name:'',affix:'',owner:'',city:'',club:'',phone:'',email:'',heatInterval:180},dogs:[],litters:[],done:{},transfers:[]});
+const emptyState=()=>({v:1,sample:false,kennel:{name:'',affix:'',owner:'',city:'',club:'',breeds:[],phone:'',email:'',heatInterval:180},dogs:[],litters:[],done:{},transfers:[]});
